@@ -1,0 +1,1 @@
+cd ./cchannel && go test -v -race
