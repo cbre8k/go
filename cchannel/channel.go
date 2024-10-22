@@ -101,5 +101,4 @@ func (c *CChannel) Close() {
 	defer c.cond.L.Unlock()
 
 	c.closed = true
-	//c.cond.Broadcast()
 }
