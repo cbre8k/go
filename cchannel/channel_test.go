@@ -23,7 +23,6 @@ func TestChannelBasicSendReceive(t *testing.T) {
 
 	go func() {
 		defer wg.Done()
-		time.Sleep(time.Millisecond * 100) // Simulate delay in receiving
 		msg, ok := ch.Receive()
 		t.Logf("Received: %v, ok: %v", msg, ok)
 
@@ -135,7 +134,6 @@ func TestUnbufferedSendReceive(t *testing.T) {
 
 	go func() {
 		defer wg.Done()
-		time.Sleep(time.Millisecond * 100) // Simulate delay in receiver
 		msg, ok := ch.Receive()
 		t.Logf("Received: %v, ok: %v", msg, ok)
 
@@ -171,7 +169,6 @@ func TestBufferedChannelFullSendReceive(t *testing.T) {
 	// Receiver should empty the buffer, allowing further sends
 	go func() {
 		defer wg.Done()
-		time.Sleep(time.Millisecond * 100)
 		msg1, ok1 := ch.Receive()
 		t.Logf("Received: %v, ok: %v", msg1, ok1)
 		msg2, ok2 := ch.Receive()
@@ -184,7 +181,6 @@ func TestBufferedChannelFullSendReceive(t *testing.T) {
 	// Another send that will block until the receiver reads from the buffer
 	go func() {
 		defer wg.Done()
-		time.Sleep(time.Millisecond * 150) // Ensure buffer is emptied before this send
 		ch.Send("Buffered Message 3")
 		t.Log("Sent 'Buffered Message 3'")
 	}()

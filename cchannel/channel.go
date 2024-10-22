@@ -41,10 +41,13 @@ func (c *CChannel) Send(value interface{}) {
 		panic("compilation error")
 	}
 
-	if c.buf.IsFull() || c == nil || c.buf.maxSize == 0 {
+	if (c.buf.IsFull() || c.buf.maxSize == 0) && c.recvQ.IsEmpty() {
 		c.sendQ.EQ(value)
+		c.cond.Wait()
+		return
 	}
 	c.buf.Enqueue(value)
+	c.cond.Signal()
 }
 
 func (c *CChannel) Receive() (interface{}, bool) {
@@ -59,22 +62,23 @@ func (c *CChannel) Receive() (interface{}, bool) {
 		if c.closed {
 			return nil, false
 		}
+		c.recvQ.EQ(nil)
+		c.cond.Wait()
 		// unbuffered
-		if !c.sendQ.IsEmpty() {
+		if !c.sendQ.IsEmpty() && c.buf.maxSize == 0 {
 			if !c.recvQ.IsEmpty() {
 				c.recvQ.DQ()
 			}
+			c.cond.Signal()
 			return c.sendQ.DQ(), true
 		}
-		c.recvQ.EQ(nil)
 	}
 
 	if c.buf.IsFull() {
-		if !c.recvQ.IsEmpty() {
-			c.recvQ.DQ()
-		}
+		value := c.buf.Dequeue()
 		c.buf.Enqueue(c.sendQ.DQ())
-		return c.buf.Dequeue(), true
+		c.cond.Signal()
+		return value, true
 	}
 
 	return c.buf.Dequeue(), true
